@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户管理 - 疫苗管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 50%, #43e97b 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .panel h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        .table-container {
+            max-height: 600px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .table-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .table-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            font-size: 14px;
+            line-height: 1.5;
+            vertical-align: middle;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        th:nth-child(1), td:nth-child(1) {
+            width: 80px;
+        }
+        th:nth-child(2), td:nth-child(2) {
+            width: 100px;
+        }
+        th:nth-child(3), td:nth-child(3) {
+            width: 80px;
+        }
+        th:nth-child(4), td:nth-child(4) {
+            width: 150px;
+        }
+        th:nth-child(5), td:nth-child(5) {
+            width: 200px;
+        }
+        th:nth-child(6), td:nth-child(6) {
+            width: 100px;
+        }
+        th:nth-child(7), td:nth-child(7) {
+            width: 100px;
+            text-align: center;
+        }
+        .btn {
+            display: inline-block;
+            padding: 6px 12px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 14px;
+            text-align: center;
+            transition: background 0.3s;
+        }
+        .btn-view {
+            background: #667eea;
+            color: white;
+        }
+        .btn-view:hover {
+            background: #5568d3;
+        }
+        .btn-back {
+            background: #6c757d;
+            color: white;
+            margin-bottom: 15px;
+        }
+        .btn-back:hover {
+            background: #5a6268;
+        }
+        .empty {
+            text-align: center;
+            color: #999;
+            padding: 30px;
+            font-size: 14px;
+        }
+        .allergy-yes {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+        .allergy-no {
+            color: #48bb78;
+        }
+        .allergy-unknown {
+            color: #999;
+        }
+        .id-card {
+            font-family: monospace;
+            letter-spacing: 1px;
+        }
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .toolbar input,
+        .toolbar select {
+            height: 36px;
+            padding: 0 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background: #fff;
+        }
+        .toolbar input {
+            min-width: 260px;
+        }
+        .toolbar .btn {
+            height: 36px;
+            line-height: 24px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-reset {
+            background: #6c757d;
+            color: #fff;
+        }
+        .btn-reset:hover {
+            background: #5a6268;
+        }
+        .result-info {
+            margin: 5px 0 10px;
+            color: #666;
+            font-size: 13px;
+        }
+        .no-result {
+            display: none;
+            margin: 10px 0;
+            padding: 10px 14px;
+            border-radius: 6px;
+            background: #fff3cd;
+            border: 1px solid #ffe69c;
+            color: #856404;
+            font-size: 14px;
+        }
+        .pagination {
+            margin-top: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .pagination-controls .btn {
+            background: #667eea;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            min-width: 70px;
+        }
+        .pagination-controls .btn:disabled {
+            background: #b5b5b5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>疫苗管理系统 - 管理后台</h1>
+        <div class="nav-links">
+            <span>管理员：{{ current_user.real_name }}</span>
+            <a href="{{ url_for('admin_dashboard') }}">返回首页</a>
+            <a href="{{ url_for('logout') }}">退出登录</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="panel">
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-back">返回首页</a>
+            <h2>用户个人信息</h2>
+            <div class="toolbar">
+                <input type="text" id="userSearch" placeholder="搜索用户名/姓名/手机号/身份证号">
+                <select id="genderFilter">
+                    <option value="">性别：全部</option>
+                    <option value="男">男</option>
+                    <option value="女">女</option>
+                    <option value="未设置">未设置</option>
+                </select>
+                <select id="allergyFilter">
+                    <option value="">过敏史：全部</option>
+                    <option value="有">有</option>
+                    <option value="无">无</option>
+                    <option value="未填写">未填写</option>
+                </select>
+                <select id="pageSize">
+                    <option value="10">每页 10 条</option>
+                    <option value="20" selected>每页 20 条</option>
+                    <option value="50">每页 50 条</option>
+                </select>
+                <button type="button" id="resetFilters" class="btn btn-reset">重置筛选</button>
+            </div>
+            <div class="result-info" id="resultInfo">共 0 条</div>
+            <div class="no-result" id="noResultMessage">未找到符合条件的用户，请调整筛选条件。</div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>用户名</th>
+                            <th>真实姓名</th>
+                            <th>性别</th>
+                            <th>手机号</th>
+                            <th>身份证号</th>
+                            <th>过敏史</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                            <tr>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.real_name }}</td>
+                                <td>{{ user.gender or '未设置' }}</td>
+                                <td>{{ user.phone }}</td>
+                                <td class="id-card">{{ user.id_card or '未填写' }}</td>
+                                <td>
+                                    {% if user.has_allergy == true %}
+                                        <span class="allergy-yes">有</span>
+                                    {% elif user.has_allergy == false %}
+                                        <span class="allergy-no">无</span>
+                                    {% else %}
+                                        <span class="allergy-unknown">未填写</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('admin_user_detail', user_id=user.id) }}" 
+                                       class="btn btn-view">查看详情</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination">
+                <div id="pageInfo">第 1 / 1 页</div>
+                <div class="pagination-controls">
+                    <button type="button" id="prevPage" class="btn">上一页</button>
+                    <button type="button" id="nextPage" class="btn">下一页</button>
+                </div>
+            </div>
+            {% if not users %}
+                <div class="empty">暂无注册用户</div>
+            {% endif %}
+        </div>
+    </div>
+    <script>
+        (function () {
+            var searchInput = document.getElementById('userSearch');
+            var genderFilter = document.getElementById('genderFilter');
+            var allergyFilter = document.getElementById('allergyFilter');
+            var pageSizeSelect = document.getElementById('pageSize');
+            var resetBtn = document.getElementById('resetFilters');
+            var resultInfo = document.getElementById('resultInfo');
+            var noResultMessage = document.getElementById('noResultMessage');
+            var pageInfo = document.getElementById('pageInfo');
+            var prevPageBtn = document.getElementById('prevPage');
+            var nextPageBtn = document.getElementById('nextPage');
+            var allRows = Array.prototype.slice.call(document.querySelectorAll('tbody tr'));
+            var currentPage = 1;
+
+            function normalizeText(text) {
+                return (text || '').trim().toLowerCase();
+            }
+
+            function getMatchedRows() {
+                var keyword = normalizeText(searchInput.value);
+                var selectedGender = genderFilter.value;
+                var selectedAllergy = allergyFilter.value;
+
+                return allRows.filter(function (row) {
+                    var username = normalizeText(row.cells[0].textContent);
+                    var realName = normalizeText(row.cells[1].textContent);
+                    var gender = row.cells[2].textContent.trim();
+                    var phone = normalizeText(row.cells[3].textContent);
+                    var idCard = normalizeText(row.cells[4].textContent);
+                    var allergy = row.cells[5].textContent.trim();
+
+                    var keywordMatched = !keyword ||
+                        username.includes(keyword) ||
+                        realName.includes(keyword) ||
+                        phone.includes(keyword) ||
+                        idCard.includes(keyword);
+                    var genderMatched = !selectedGender || gender === selectedGender;
+                    var allergyMatched = !selectedAllergy || allergy === selectedAllergy;
+
+                    return keywordMatched && genderMatched && allergyMatched;
+                });
+            }
+
+            function renderTable() {
+                var matchedRows = getMatchedRows();
+                var pageSize = parseInt(pageSizeSelect.value, 10);
+                var totalRows = matchedRows.length;
+                var totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
+
+                if (currentPage > totalPages) {
+                    currentPage = totalPages;
+                }
+
+                var startIndex = (currentPage - 1) * pageSize;
+                var endIndex = startIndex + pageSize;
+
+                allRows.forEach(function (row) {
+                    row.style.display = 'none';
+                });
+
+                matchedRows.slice(startIndex, endIndex).forEach(function (row) {
+                    row.style.display = '';
+                });
+
+                resultInfo.textContent = '共 ' + totalRows + ' 条，当前第 ' + currentPage + ' 页';
+                pageInfo.textContent = '第 ' + currentPage + ' / ' + totalPages + ' 页';
+                noResultMessage.style.display = totalRows === 0 ? 'block' : 'none';
+                prevPageBtn.disabled = currentPage <= 1;
+                nextPageBtn.disabled = currentPage >= totalPages;
+            }
+
+            function applyFiltersFromStart() {
+                currentPage = 1;
+                renderTable();
+            }
+
+            searchInput.addEventListener('input', applyFiltersFromStart);
+            genderFilter.addEventListener('change', applyFiltersFromStart);
+            allergyFilter.addEventListener('change', applyFiltersFromStart);
+            pageSizeSelect.addEventListener('change', applyFiltersFromStart);
+
+            resetBtn.addEventListener('click', function () {
+                searchInput.value = '';
+                genderFilter.value = '';
+                allergyFilter.value = '';
+                pageSizeSelect.value = '20';
+                applyFiltersFromStart();
+            });
+
+            prevPageBtn.addEventListener('click', function () {
+                if (currentPage > 1) {
+                    currentPage -= 1;
+                    renderTable();
+                }
+            });
+
+            nextPageBtn.addEventListener('click', function () {
+                var totalRows = getMatchedRows().length;
+                var pageSize = parseInt(pageSizeSelect.value, 10);
+                var totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
+                if (currentPage < totalPages) {
+                    currentPage += 1;
+                    renderTable();
+                }
+            });
+
+            renderTable();
+        })();
+    </script>
+</body>
+</html>

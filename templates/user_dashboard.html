@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户中心 - 疫苗管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 50%, #43e97b 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .welcome {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .welcome h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 15px;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 12px;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+        .stat-value {
+            color: #333;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .btn:hover {
+            background: #5568d3;
+        }
+        .appointments {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .appointments h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .appointments-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .appointments-toolbar input,
+        .appointments-toolbar select {
+            height: 34px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 0 10px;
+            font-size: 14px;
+        }
+        .appointments-toolbar input {
+            min-width: 240px;
+        }
+        .btn-filter-reset {
+            border: none;
+            background: #6c757d;
+            color: #fff;
+            height: 34px;
+            padding: 0 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .btn-filter-reset:hover {
+            background: #5a6268;
+        }
+        .table-wrapper {
+            overflow-x: auto;
+            border: 1px solid #eee;
+            border-radius: 8px;
+        }
+        .table-no-result {
+            display: none;
+            margin: 12px 0 0;
+            padding: 10px 12px;
+            border: 1px solid #ffe69c;
+            background: #fff3cd;
+            color: #856404;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        th, td {
+            padding: 12px 8px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+            vertical-align: middle;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        /* 疫苗名称列 */
+        th:nth-child(1), td:nth-child(1) {
+            width: 18%;
+            text-align: left;
+        }
+        /* 生产厂家列 */
+        th:nth-child(2), td:nth-child(2) {
+            width: 15%;
+            text-align: left;
+        }
+        /* 预约日期列 */
+        th:nth-child(3), td:nth-child(3) {
+            width: 12%;
+        }
+        /* 状态列 */
+        th:nth-child(4), td:nth-child(4) {
+            width: 10%;
+        }
+        /* 接种状态列 */
+        th:nth-child(5), td:nth-child(5) {
+            width: 10%;
+        }
+        /* 拒绝理由列 */
+        th:nth-child(6), td:nth-child(6) {
+            width: 15%;
+            text-align: left;
+        }
+        /* 创建时间列 */
+        th:nth-child(7), td:nth-child(7) {
+            width: 12%;
+        }
+        /* 操作列 */
+        th:nth-child(8), td:nth-child(8) {
+            width: 8%;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            white-space: nowrap;
+            display: inline-block;
+        }
+        tbody tr {
+            height: auto;
+            min-height: 60px;
+        }
+        tbody tr td {
+            line-height: 1.5;
+        }
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .btn {
+            display: inline-block;
+            padding: 5px 10px;
+            text-decoration: none;
+            border-radius: 3px;
+            font-size: 12px;
+            margin: 0 2px;
+            min-width: 50px;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-cancel {
+            background: #20c997;
+            color: white;
+        }
+        .btn-cancel:hover {
+            background: #1aa885;
+        }
+        .empty {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+        }
+        .floating-alert {
+            position: fixed;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 15px 20px;
+            border-radius: 5px;
+            text-align: center;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            min-width: 300px;
+        }
+        .floating-alert-error {
+            background: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+        .floating-alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        @media (max-width: 900px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, minmax(120px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>疫苗用户中心</h1>
+        <div class="nav-links">
+            <span>欢迎，{{ current_user.real_name }}</span>
+            <a href="{{ url_for('logout') }}">退出登录</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div id="alert-message" class="floating-alert {% if category == 'error' %}floating-alert-error{% else %}floating-alert-success{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="welcome">
+            <h2>欢迎来到用户中心</h2>
+            <p>您可以查看您的疫苗预约记录，编辑个人信息，或者前往疫苗列表进行预约。</p>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <a href="{{ url_for('vaccine_list') }}" class="btn">前往疫苗预约中心</a>
+                <a href="{{ url_for('edit_profile') }}" class="btn" style="background: #48bb78;">编辑个人信息</a>
+                <a href="{{ url_for('ai_chat') }}" class="btn" style="background: #667eea;">智能咨询中心</a>
+            </div>
+            {% set total_count = appointments|length %}
+            {% set pending_count = appointments|selectattr('status', 'equalto', 'pending')|list|length %}
+            {% set approved_count = appointments|selectattr('status', 'equalto', 'approved')|list|length %}
+            {% set rejected_count = appointments|selectattr('status', 'equalto', 'rejected')|list|length %}
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">预约总数</div>
+                    <div class="stat-value">{{ total_count }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">待审批</div>
+                    <div class="stat-value">{{ pending_count }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">已通过</div>
+                    <div class="stat-value">{{ approved_count }}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">已拒绝</div>
+                    <div class="stat-value">{{ rejected_count }}</div>
+                </div>
+            </div>
+        </div>
+        
+        {% if announcements %}
+        <div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <h2 style="color: #333; margin-bottom: 15px; font-size: 18px;">最新公告</h2>
+            <div style="max-height: 300px; overflow-y: auto;">
+                {% for announcement in announcements %}
+                <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #eee;">
+                    <h3 style="color: #444; margin-bottom: 8px; font-size: 16px;">{{ announcement.title }}</h3>
+                    <p style="color: #666; font-size: 14px; line-height: 1.6; margin-bottom: 8px;">{{ announcement.content }}</p>
+                    <p style="color: #999; font-size: 12px;">发布时间：{{ announcement.create_time.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                    <p style="color: #999; font-size: 12px;">最后更新：{{ announcement.update_time.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="appointments">
+            <h2>我的预约记录</h2>
+            {% if appointments %}
+                <div class="appointments-toolbar">
+                    <input type="text" id="appointmentSearch" placeholder="搜索疫苗名称或厂家">
+                    <select id="appointmentStatusFilter">
+                        <option value="">状态：全部</option>
+                        <option value="pending">待审批</option>
+                        <option value="approved">已通过</option>
+                        <option value="rejected">已拒绝</option>
+                    </select>
+                    <button type="button" id="resetAppointmentFilter" class="btn-filter-reset">重置筛选</button>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>疫苗名称</th>
+                                <th>生产厂家</th>
+                                <th>预约日期</th>
+                                <th>状态</th>
+                                <th>接种状态</th>
+                                <th>拒绝理由</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="appointmentTableBody">
+                            {% for appointment in appointments %}
+                                <tr data-status="{{ appointment.status }}">
+                                    <td>{{ appointment.vaccine.name }}</td>
+                                    <td>{{ appointment.vaccine.manufacturer }}</td>
+                                    <td>{{ appointment.appointment_date }}</td>
+                                    <td>
+                                        {% if appointment.status == 'pending' %}
+                                            <span class="status status-pending">待审批</span>
+                                        {% elif appointment.status == 'approved' %}
+                                            <span class="status status-approved">已通过</span>
+                                        {% else %}
+                                            <span class="status status-rejected">已拒绝</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if appointment.vaccination_status == '已接种' %}
+                                            <span class="status status-approved" data-appointment-id="{{ appointment.id }}">已接种</span>
+                                        {% else %}
+                                            <span class="status status-pending" data-appointment-id="{{ appointment.id }}">未接种</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if appointment.status == 'rejected' %}
+                                            {{ appointment.rejection_reason or '无' }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ appointment.create_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                    <td>
+                                        {% if appointment.status == 'pending' %}
+                                            <a href="{{ url_for('cancel_appointment', appointment_id=appointment.id) }}"
+                                               class="btn btn-cancel"
+                                               onclick="return confirm('确定要取消该预约吗？')">取消预约</a>
+                                        {% else %}
+                                            <span style="color: #999;">-</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-no-result" id="appointmentNoResult">未找到匹配的预约记录，请更换关键词或筛选条件。</div>
+            {% else %}
+                <div class="empty">暂无预约记录</div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script>
+        window.onload = function() {
+            setTimeout(function() {
+                var alertMessage = document.getElementById('alert-message');
+                if (alertMessage) {
+                    alertMessage.style.transition = 'opacity 0.5s';
+                    alertMessage.style.opacity = '0';
+                    setTimeout(function() {
+                        alertMessage.style.display = 'none';
+                    }, 500);
+                }
+            }, 3000);
+            
+            // 启动实时检查接种状态
+            startVaccinationStatusCheck();
+            initAppointmentFilter();
+        };
+
+        function initAppointmentFilter() {
+            var searchInput = document.getElementById('appointmentSearch');
+            var statusFilter = document.getElementById('appointmentStatusFilter');
+            var resetBtn = document.getElementById('resetAppointmentFilter');
+            var noResult = document.getElementById('appointmentNoResult');
+            var rows = document.querySelectorAll('#appointmentTableBody tr');
+
+            if (!searchInput || !statusFilter || !resetBtn || rows.length === 0) {
+                return;
+            }
+
+            function applyFilter() {
+                var keyword = searchInput.value.trim().toLowerCase();
+                var status = statusFilter.value;
+                var visibleCount = 0;
+
+                rows.forEach(function(row) {
+                    var vaccineName = row.cells[0].textContent.toLowerCase();
+                    var manufacturer = row.cells[1].textContent.toLowerCase();
+                    var rowStatus = row.dataset.status;
+
+                    var keywordMatched = !keyword || vaccineName.includes(keyword) || manufacturer.includes(keyword);
+                    var statusMatched = !status || rowStatus === status;
+                    var visible = keywordMatched && statusMatched;
+
+                    row.style.display = visible ? '' : 'none';
+                    if (visible) {
+                        visibleCount += 1;
+                    }
+                });
+
+                noResult.style.display = visibleCount === 0 ? 'block' : 'none';
+            }
+
+            searchInput.addEventListener('input', applyFilter);
+            statusFilter.addEventListener('change', applyFilter);
+            resetBtn.addEventListener('click', function() {
+                searchInput.value = '';
+                statusFilter.value = '';
+                applyFilter();
+            });
+        }
+        
+        function startVaccinationStatusCheck() {
+            // 每30秒检查一次接种状态
+            setInterval(function() {
+                checkVaccinationStatus();
+            }, 30000);
+        }
+        
+        function checkVaccinationStatus() {
+            // 获取所有预约记录的状态元素
+            var statusElements = document.querySelectorAll('td:nth-child(5) span');
+            
+            // 检查每个预约的接种状态
+            statusElements.forEach(function(element) {
+                var appointmentId = element.dataset.appointmentId;
+                if (appointmentId) {
+                    fetch('/api/appointment/' + appointmentId + '/vaccination-status')
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                var currentStatus = element.textContent.trim();
+                                var newStatus = data.vaccination_status;
+                                
+                                // 如果状态发生变化，更新页面
+                                if (currentStatus !== newStatus) {
+                                    if (newStatus === '已接种') {
+                                        element.className = 'status status-approved';
+                                        element.textContent = '已接种';
+                                    } else {
+                                        element.className = 'status status-pending';
+                                        element.textContent = '未接种';
+                                    }
+                                    
+                                    // 显示状态更新提示
+                                    showStatusUpdateNotification(newStatus);
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('检查接种状态失败:', error);
+                        });
+                }
+            });
+        }
+        
+        function showStatusUpdateNotification(status) {
+            var notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                padding: 15px 20px;
+                border-radius: 5px;
+                text-align: center;
+                z-index: 1000;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                min-width: 300px;
+                background: #d4edda;
+                color: #155724;
+                border: 1px solid #c3e6cb;
+            `;
+            notification.textContent = '接种状态已更新为：' + status;
+            
+            document.body.appendChild(notification);
+            
+            // 3秒后自动消失
+            setTimeout(function() {
+                notification.style.transition = 'opacity 0.5s';
+                notification.style.opacity = '0';
+                setTimeout(function() {
+                    notification.remove();
+                }, 500);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

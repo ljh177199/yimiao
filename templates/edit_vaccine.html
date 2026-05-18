@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑疫苗 - 疫苗管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 50%, #43e97b 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .nav-links span {
+            color: rgba(255,255,255,0.9);
+            font-size: 14px;
+        }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            transition: opacity 0.3s;
+        }
+        .nav-links a:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .form-container {
+            background: white;
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        .form-container h2 {
+            color: #333;
+            margin-bottom: 24px;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .form-container h2::before {
+            content: '✏️';
+            font-size: 18px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .form-group label .required {
+            color: #e74c3c;
+            margin-left: 4px;
+        }
+        .form-group input, 
+        .form-group textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: #fafafa;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+            line-height: 1.6;
+        }
+        .form-group input:focus, 
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #4facfe;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: #aaa;
+        }
+        .form-group .hint {
+            font-size: 12px;
+            color: #999;
+            margin-top: 6px;
+        }
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 32px;
+        }
+        .btn {
+            flex: 1;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(79, 172, 254, 0.4);
+        }
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+            border: 2px solid #e0e0e0;
+        }
+        .btn-secondary:hover {
+            background: #eee;
+            border-color: #ccc;
+        }
+        .alert {
+            padding: 14px 16px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .alert-error {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            color: #721c24;
+            border: 1px solid #dc3545;
+        }
+        .alert-success {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            color: #155724;
+            border: 1px solid #28a745;
+        }
+        .alert .icon {
+            font-size: 18px;
+        }
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .loading-overlay.active {
+            display: flex;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error-message {
+            color: #e74c3c;
+            font-size: 13px;
+            margin-top: 6px;
+            display: none;
+        }
+        .error-message.show {
+            display: block;
+        }
+        @media (max-width: 600px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                padding: 16px 20px;
+            }
+            .header h1 {
+                font-size: 20px;
+            }
+            .form-container {
+                padding: 20px;
+            }
+            .button-group {
+                flex-direction: column;
+            }
+            .btn {
+                padding: 12px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+    
+    <div class="header">
+        <h1>疫苗管理系统</h1>
+        <div class="nav-links">
+            <span>管理员：{{ current_user.real_name }}</span>
+            <a href="{{ url_for('admin_dashboard') }}">返回管理后台</a>
+            <a href="{{ url_for('logout') }}">退出登录</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="form-container">
+            <h2>编辑疫苗信息</h2>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            <span class="icon">{{ '✓' if category == 'success' else '✕' }}</span>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form method="POST" id="vaccineForm">
+                <div class="form-group">
+                    <label>疫苗名称 <span class="required">*</span></label>
+                    <input type="text" name="name" value="{{ vaccine.name }}" required placeholder="请输入疫苗名称">
+                    <div class="error-message" id="nameError">疫苗名称不能为空</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>生产厂家 <span class="required">*</span></label>
+                    <input type="text" name="manufacturer" value="{{ vaccine.manufacturer }}" required placeholder="请输入生产厂家">
+                    <div class="error-message" id="manufacturerError">生产厂家不能为空</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>疫苗介绍</label>
+                    <textarea name="description" placeholder="请输入疫苗介绍...">{{ vaccine.description }}</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>库存数量 <span class="required">*</span></label>
+                    <input type="number" name="stock" value="{{ vaccine.stock }}" required min="0">
+                    <div class="hint">库存数量不能为负数</div>
+                    <div class="error-message" id="stockError">库存数量不能为空且不能为负数</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>价格 <span class="required">*</span></label>
+                    <input type="number" name="price" value="{{ vaccine.price }}" required min="0" step="0.01">
+                    <div class="hint">价格格式：0.00</div>
+                    <div class="error-message" id="priceError">价格不能为空且不能为负数</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>入库时间</label>
+                    <input type="date" name="storage_date" value="{{ vaccine.storage_date.strftime('%Y-%m-%d') if vaccine.storage_date else '' }}" id="storageDate" max="">
+                    <div class="hint">入库时间不能超过当天日期</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>保存时间（天）</label>
+                    <input type="number" name="save_time" value="{{ vaccine.save_time }}" min="1">
+                    <div class="hint">疫苗的有效保存天数</div>
+                </div>
+                
+                <div class="button-group">
+                    <button type="button" class="btn btn-secondary" onclick="handleCancel()">取消</button>
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <span>保存修改</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // 设置入库时间的最大值为今天
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('storageDate').setAttribute('max', today);
+        });
+        
+        // 表单验证
+        const form = document.getElementById('vaccineForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+            
+            // 验证疫苗名称
+            const nameInput = document.querySelector('input[name="name"]');
+            if (!nameInput.value.trim()) {
+                document.getElementById('nameError').classList.add('show');
+                isValid = false;
+            } else {
+                document.getElementById('nameError').classList.remove('show');
+            }
+            
+            // 验证生产厂家
+            const manufacturerInput = document.querySelector('input[name="manufacturer"]');
+            if (!manufacturerInput.value.trim()) {
+                document.getElementById('manufacturerError').classList.add('show');
+                isValid = false;
+            } else {
+                document.getElementById('manufacturerError').classList.remove('show');
+            }
+            
+            // 验证库存数量
+            const stockInput = document.querySelector('input[name="stock"]');
+            if (!stockInput.value || parseInt(stockInput.value) < 0) {
+                document.getElementById('stockError').classList.add('show');
+                isValid = false;
+            } else {
+                document.getElementById('stockError').classList.remove('show');
+            }
+            
+            // 验证价格
+            const priceInput = document.querySelector('input[name="price"]');
+            if (!priceInput.value || parseFloat(priceInput.value) < 0) {
+                document.getElementById('priceError').classList.add('show');
+                isValid = false;
+            } else {
+                document.getElementById('priceError').classList.remove('show');
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+                return;
+            }
+            
+            // 显示加载状态
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading-spinner" style="width: 20px; height: 20px; border-width: 2px;"></span> 保存中...';
+            loadingOverlay.classList.add('active');
+        });
+        
+        // 取消按钮
+        function handleCancel() {
+            window.location.href = '{{ url_for("admin_dashboard") }}';
+        }
+    </script>
+</body>
+</html>

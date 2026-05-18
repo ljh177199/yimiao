@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户详情 - 疫苗管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 50%, #43e97b 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .panel {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .panel h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .info-item.full-width {
+            grid-column: 1 / -1;
+        }
+        .info-label {
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        .info-value {
+            color: #333;
+            font-size: 15px;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+        }
+        .info-value.empty {
+            color: #999;
+            font-style: italic;
+        }
+        .allergy-yes {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+        .allergy-no {
+            color: #48bb78;
+        }
+        .allergy-unknown {
+            color: #999;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: background 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-back {
+            background: #6c757d;
+            color: white;
+            margin-bottom: 20px;
+        }
+        .btn-back:hover {
+            background: #5a6268;
+        }
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            font-size: 14px;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        .status {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .empty {
+            text-align: center;
+            color: #999;
+            padding: 30px;
+            font-size: 14px;
+        }
+        .contraindications {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 5px;
+            padding: 15px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>疫苗管理系统 - 管理后台</h1>
+        <div class="nav-links">
+            <span>管理员：{{ current_user.real_name }}</span>
+            <a href="{{ url_for('admin_dashboard') }}">返回首页</a>
+            <a href="{{ url_for('logout') }}">退出登录</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <a href="{{ url_for('admin_users') }}" class="btn btn-back">返回用户列表</a>
+        
+        <div class="panel">
+            <h2>用户基本信息</h2>
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="info-label">用户名</span>
+                    <span class="info-value">{{ user.username }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">真实姓名</span>
+                    <span class="info-value">{{ user.real_name }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">性别</span>
+                    <span class="info-value {% if not user.gender %}empty{% endif %}">{{ user.gender or '未设置' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">手机号</span>
+                    <span class="info-value">{{ user.phone }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">身份证号</span>
+                    <span class="info-value {% if not user.id_card %}empty{% endif %}">{{ user.id_card or '未填写' }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">过敏史</span>
+                    <span class="info-value">
+                        {% if user.has_allergy == true %}
+                            <span class="allergy-yes">有</span>
+                        {% elif user.has_allergy == false %}
+                            <span class="allergy-no">无</span>
+                        {% else %}
+                            <span class="allergy-unknown">未填写</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-item full-width">
+                    <span class="info-label">家庭住址</span>
+                    <span class="info-value {% if not user.address %}empty{% endif %}">{{ user.address or '未填写' }}</span>
+                </div>
+                {% if user.contraindications %}
+                <div class="info-item full-width">
+                    <span class="info-label">过敏症状</span>
+                    <div class="contraindications">{{ user.contraindications }}</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h2>预约记录</h2>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>疫苗名称</th>
+                            <th>预约日期</th>
+                            <th>接种原因</th>
+                            <th>上一次接种</th>
+                            <th>状态</th>
+                            <th>接种状态</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for appointment in appointments %}
+                            <tr id="appointment-{{ appointment.id }}">
+                                <td>{{ appointment.vaccine.name }}</td>
+                                <td>{{ appointment.appointment_date }}</td>
+                                <td>{{ appointment.reason }}</td>
+                                <td>{{ appointment.last_vaccination_date or '无记录' }}</td>
+                                <td>
+                                    {% if appointment.status == 'pending' %}
+                                        <span class="status status-pending">待审批</span>
+                                    {% elif appointment.status == 'approved' %}
+                                        <span class="status status-approved">已通过</span>
+                                    {% else %}
+                                        <span class="status status-rejected">已拒绝</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <label style="display: flex; align-items: center; cursor: pointer; margin: 0;">
+                                            <input type="radio" name="vaccination_status_{{ appointment.id }}" value="未接种" 
+                                                   {% if appointment.vaccination_status == '未接种' or not appointment.vaccination_status %}checked{% endif %}
+                                                   onchange="updateAppointmentVaccinationStatus({{ appointment.id }}, '未接种')"
+                                                   style="margin-right: 3px; cursor: pointer;">
+                                            <span style="font-size: 13px;">未接种</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; cursor: pointer; margin: 0;">
+                                            <input type="radio" name="vaccination_status_{{ appointment.id }}" value="已接种"
+                                                   {% if appointment.vaccination_status == '已接种' %}checked{% endif %}
+                                                   onchange="updateAppointmentVaccinationStatus({{ appointment.id }}, '已接种')"
+                                                   style="margin-right: 3px; cursor: pointer;">
+                                            <span style="font-size: 13px;">已接种</span>
+                                        </label>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if not appointments %}
+                <div class="empty">该用户暂无预约记录</div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <script>
+        // 更新预约记录的接种状态
+        function updateAppointmentVaccinationStatus(appointmentId, status) {
+            // 构建完整的URL
+            var url = '/admin/appointment/' + appointmentId + '/vaccination-status';
+            
+            // 使用Fetch API
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'vaccination_status=' + encodeURIComponent(status)
+            })
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                if (data.success) {
+                    showNotification('接种状态已更新为：' + status, 'success');
+                } else {
+                    showNotification('更新失败：' + data.message, 'error');
+                }
+            })
+            .catch(function(error) {
+                console.error('请求错误:', error);
+                showNotification('更新失败，请重试', 'error');
+            });
+        }
+        
+        // 显示通知
+        function showNotification(message, type) {
+            // 移除已有的通知
+            var existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+            
+            // 创建新通知
+            var notification = document.createElement('div');
+            notification.className = 'notification notification-' + type;
+            notification.textContent = message;
+            notification.style.cssText = 'position: fixed; top: 20px; right: 20px; padding: 15px 20px; border-radius: 5px; color: white; font-size: 14px; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: opacity 0.3s;';
+            
+            if (type === 'success') {
+                notification.style.background = '#48bb78';
+            } else {
+                notification.style.background = '#e53e3e';
+            }
+            
+            document.body.appendChild(notification);
+            
+            // 3秒后自动消失
+            setTimeout(function() {
+                notification.style.opacity = '0';
+                setTimeout(function() {
+                    if (notification.parentNode) {
+                        notification.remove();
+                    }
+                }, 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

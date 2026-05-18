@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理后台 - 疫苗管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 50%, #43e97b 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .panel h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+        .table-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .table-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        .table-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+            font-size: 14px;
+            line-height: 1.5;
+            vertical-align: middle;
+        }
+        th:nth-child(1), td:nth-child(1) {
+            width: 120px;
+            white-space: nowrap;
+        }
+        th:nth-child(3), td:nth-child(3) {
+            width: 120px;
+            white-space: nowrap;
+        }
+        th:nth-child(4) {
+            text-align: center;
+        }
+        td:nth-child(4) {
+            max-width: 300px;
+            overflow-y: auto;
+            max-height: 80px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        th:nth-child(5), td:nth-child(5) {
+            width: 150px;
+            white-space: nowrap;
+        }
+        th:nth-child(6), td:nth-child(6) {
+            text-align: center;
+            width: 100px;
+        }
+        th:nth-child(9), td:nth-child(9) {
+            text-align: center;
+            width: 150px;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #333;
+        }
+        .status {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 14px;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .btn {
+            display: inline-block;
+            padding: 6px 12px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 14px;
+            margin: 0 3px;
+            min-width: 60px;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            vertical-align: middle;
+            line-height: 1.5;
+        }
+        .btn-approve {
+            background: #48bb78;
+            color: white;
+        }
+        .btn-reject {
+            background: #e53e3e;
+            color: white;
+        }
+        .btn-delete {
+            background: #e53e3e;
+            color: white;
+        }
+        .btn-clear {
+            background: #e53e3e;
+            color: white;
+            padding: 8px 15px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        .btn-add {
+            background: #667eea;
+            color: white;
+            padding: 8px 15px;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        .nav-users {
+            background: #48bb78;
+            color: white;
+            padding: 6px 15px;
+            font-size: 14px;
+            border-radius: 4px;
+            margin-right: 15px;
+        }
+        .nav-users:hover {
+            background: #38a169;
+        }
+        .empty {
+            text-align: center;
+            color: #999;
+            padding: 30px;
+            font-size: 14px;
+        }
+        .search-box {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            height: 100%;
+        }
+        .search-box input {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 200px;
+            height: 36px;
+            box-sizing: border-box;
+            line-height: 20px;
+        }
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .search-box button {
+            padding: 8px 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            height: 36px;
+            box-sizing: border-box;
+            line-height: 20px;
+        }
+        .search-box button:hover {
+            background: #5568d3;
+        }
+        .highlight {
+            background-color: #fff3cd !important;
+            transition: background-color 0.3s;
+        }
+        .recently-edited {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%) !important;
+            box-shadow: inset 0 0 0 2px #28a745;
+            animation: pulse-highlight 2s ease-in-out;
+        }
+        @keyframes pulse-highlight {
+            0%, 100% {
+                box-shadow: inset 0 0 0 2px #28a745;
+            }
+            50% {
+                box-shadow: inset 0 0 0 4px #28a745, 0 0 20px rgba(40, 167, 69, 0.3);
+            }
+        }
+        .no-result {
+            text-align: center;
+            color: #842029;
+            background: #f8d7da;
+            border: 1px solid #f5c2c7;
+            border-radius: 6px;
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 0 0 12px 0;
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.12);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>疫苗管理系统 - 管理后台</h1>
+        <div class="nav-links">
+            <a href="{{ url_for('admin_users') }}" class="nav-users">用户管理</a>
+            <span>管理员：{{ current_user.real_name }}</span>
+            <a href="{{ url_for('logout') }}">退出登录</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div id="alert-message" class="alert alert-{{ category }}" style="position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%); padding: 15px 20px; border-radius: 5px; text-align: center; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); min-width: 300px; {% if category == 'error' %}background: #fee; color: #c33; border: 1px solid #fcc;{% else %}background: #d4edda; color: #155724; border: 1px solid #c3e6cb;{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="dashboard">
+            <div class="panel" id="announcement-management">
+                <h2>发布公告</h2>
+                <form method="POST" style="margin-bottom: 20px;">
+                    <input type="hidden" name="action" value="publish_announcement">
+                    <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                        <div>
+                            <label for="title" style="display: block; margin-bottom: 5px; font-weight: bold;">公告标题</label>
+                            <input type="text" id="title" name="title" placeholder="请输入公告标题" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div>
+                            <label for="content" style="display: block; margin-bottom: 5px; font-weight: bold;">公告内容</label>
+                            <textarea id="content" name="content" placeholder="请输入公告内容" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; height: 100px; resize: vertical;"></textarea>
+                        </div>
+                        <button type="submit" class="btn" style="background: #48bb78; color: white; padding: 8px 15px; align-self: flex-start;">发布公告</button>
+                    </div>
+                </form>
+                
+                <h3 style="margin-top: 30px; margin-bottom: 15px; font-size: 16px;">历史公告</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>标题</th>
+                                <th>内容</th>
+                                <th style="text-align: center;">发布时间</th>
+                                <th style="text-align: center;">最后更新时间</th>
+                                <th style="text-align: center;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for announcement in announcements %}
+                                <tr>
+                                    <td>{{ announcement.title }}</td>
+                                    <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ announcement.content[:80] }}{% if announcement.content|length > 80 %}...{% endif %}</td>
+                                    <td style="text-align: center;">{{ announcement.create_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td style="text-align: center;">{{ announcement.update_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td style="text-align: center;">
+                                        <a href="{{ url_for('edit_announcement', announcement_id=announcement.id) }}" 
+                                           class="btn" style="background: #667eea; color: white; margin-right: 5px;">编辑</a>
+                                        <a href="{{ url_for('delete_announcement', announcement_id=announcement.id) }}" 
+                                           class="btn btn-delete" 
+                                           onclick="return confirm('确定要删除该公告吗？')">删除</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if not announcements %}
+                    <div class="empty">暂无公告记录</div>
+                {% endif %}
+            </div>
+            
+            <div class="panel" id="appointment-approval">
+                <h2>预约审批</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <a href="{{ url_for('clear_all_appointments') }}" 
+                       class="btn btn-clear" 
+                       onclick="return confirm('确定要清空所有预约记录吗？此操作不可恢复！')">清空全部记录</a>
+                </div>
+                <form id="batchForm" method="POST">
+                    <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                        <button type="button" id="selectAll" class="btn" style="background: #6c757d; color: white;">全选</button>
+                        <button type="button" id="selectNone" class="btn" style="background: #6c757d; color: white;">取消全选</button>
+                        <input type="hidden" name="action" id="batchAction">
+                        <button type="submit" id="batchApprove" class="btn btn-approve" 
+                                onclick="setBatchAction('approve'); return validateSelection();">批量通过</button>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="width: 50px;">
+                                        <input type="checkbox" id="checkAll">
+                                    </th>
+                                    <th>用户</th>
+                                    <th>疫苗</th>
+                                    <th>预约日期</th>
+                                    <th>接种原因</th>
+                                    <th>上一次接种</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for appointment in appointments %}
+                                    {% if appointment.status == 'pending' %}
+                                    <tr>
+                                        <td>
+                                            <input type="checkbox" name="appointment_ids" value="{{ appointment.id }}" class="appointment-checkbox">
+                                        </td>
+                                        <td>{{ appointment.user.real_name }}</td>
+                                        <td>{{ appointment.vaccine.name }}</td>
+                                        <td>{{ appointment.appointment_date }}</td>
+                                        <td>{{ appointment.reason }}</td>
+                                        <td>{{ appointment.last_vaccination_date or '无记录' }}</td>
+                                        <td>
+                                            <span class="status status-pending">待审批</span>
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('approve_appointment', appointment_id=appointment.id) }}" 
+                                               class="btn btn-approve">通过</a>
+                                            <a href="{{ url_for('reject_appointment', appointment_id=appointment.id) }}" 
+                                               class="btn btn-reject">拒绝</a>
+                                            <a href="{{ url_for('delete_appointment', appointment_id=appointment.id) }}" 
+                                               class="btn btn-delete" 
+                                               onclick="return confirm('确定要删除该预约记录吗？')">删除</a>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td></td>
+                                        <td>{{ appointment.user.real_name }}</td>
+                                        <td>{{ appointment.vaccine.name }}</td>
+                                        <td>{{ appointment.appointment_date }}</td>
+                                        <td>{{ appointment.reason }}</td>
+                                        <td>{{ appointment.last_vaccination_date or '无记录' }}</td>
+                                        <td>
+                                            {% if appointment.status == 'approved' %}
+                                                <span class="status status-approved">已通过</span>
+                                            {% else %}
+                                                <span class="status status-rejected">已拒绝</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('delete_appointment', appointment_id=appointment.id) }}" 
+                                               class="btn btn-delete" 
+                                               onclick="return confirm('确定要删除该预约记录吗？')">删除</a>
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </form>
+                {% if not appointments %}
+                    <div class="empty">暂无预约记录</div>
+                {% endif %}
+                
+                <script>
+                    // 全选/取消全选
+                    document.getElementById('checkAll').addEventListener('change', function() {
+                        const checkboxes = document.querySelectorAll('.appointment-checkbox');
+                        checkboxes.forEach(checkbox => {
+                            checkbox.checked = this.checked;
+                        });
+                    });
+                    
+                    // 全选按钮
+                    document.getElementById('selectAll').addEventListener('click', function() {
+                        const checkboxes = document.querySelectorAll('.appointment-checkbox');
+                        checkboxes.forEach(checkbox => {
+                            checkbox.checked = true;
+                        });
+                        document.getElementById('checkAll').checked = true;
+                    });
+                    
+                    // 取消全选按钮
+                    document.getElementById('selectNone').addEventListener('click', function() {
+                        const checkboxes = document.querySelectorAll('.appointment-checkbox');
+                        checkboxes.forEach(checkbox => {
+                            checkbox.checked = false;
+                        });
+                        document.getElementById('checkAll').checked = false;
+                    });
+                    
+                    // 设置批量操作类型
+                    function setBatchAction(action) {
+                        document.getElementById('batchAction').value = action;
+                    }
+                    
+                    // 验证是否选择了预约
+                    function validateSelection() {
+                        const checkboxes = document.querySelectorAll('.appointment-checkbox:checked');
+                        if (checkboxes.length === 0) {
+                            alert('请至少选择一条预约记录');
+                            return false;
+                        }
+                        return true;
+                    }
+                </script>
+            </div>
+            
+            <div class="panel" id="vaccine-management">
+                <h2>疫苗管理</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <a href="{{ url_for('add_vaccine') }}" class="btn btn-add">添加疫苗</a>
+                    <div class="search-box">
+                        <input type="text" id="vaccineSearch" placeholder="输入疫苗名称搜索..." onkeydown="handleSearchKeyDown(event)">
+                        <button onclick="searchVaccines()">搜索</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>疫苗名称</th>
+                                <th>生产厂家</th>
+                                <th>库存</th>
+                                <th>价格</th>
+                                <th>入库时间</th>
+                                <th>保存时间</th>
+                                <th>过期日期</th>
+                                <th>状态</th>
+                                <th style="text-align: center;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for vaccine in vaccines %}
+                                <tr id="vaccine-{{ vaccine.id }}">
+                                    <td>{{ vaccine.name }}</td>
+                                    <td>{{ vaccine.manufacturer }}</td>
+                                    <td>{{ vaccine.stock }}</td>
+                                    <td>¥{{ vaccine.price }}</td>
+                                    <td>{{ vaccine.storage_date.strftime('%Y-%m-%d') if vaccine.storage_date else '未设置' }}</td>
+                                    <td>{% if vaccine.save_time %}{{ vaccine.save_time }}天{% else %}未设置{% endif %}</td>
+                                    <td style="white-space: nowrap;">
+                                        {% if vaccine.storage_date and vaccine.save_time %}
+                                            {% set expire_date = vaccine.storage_date + timedelta(days=vaccine.save_time) %}
+                                            {{ expire_date.strftime('%Y-%m-%d') }}
+                                        {% else %}
+                                            未设置
+                                        {% endif %}
+                                    </td>
+                                    <td style="white-space: nowrap;">
+                                        {% if vaccine.storage_date and vaccine.save_time %}
+                                            {% set expire_date = vaccine.storage_date + timedelta(days=vaccine.save_time) %}
+                                            {% if expire_date < current_time %}
+                                                <span style="color: #dc3545; font-weight: bold;">已过期</span>
+                                            {% elif (expire_date - current_time).days <= 7 %}
+                                                <span style="color: #f59e0b; font-weight: bold;">即将过期</span>
+                                            {% else %}
+                                                <span style="color: #10b981; font-weight: bold;">正常</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span style="color: #6b7280;">未知</span>
+                                        {% endif %}
+                                    </td>
+                                    <td style="white-space: nowrap;">
+                                        <a href="{{ url_for('edit_vaccine', vaccine_id=vaccine.id) }}" 
+                                           class="btn btn-edit" 
+                                           style="background: #667eea; color: white; margin-right: 5px; display: inline-block;">编辑</a>
+                                        <a href="{{ url_for('delete_vaccine', vaccine_id=vaccine.id) }}" 
+                                           class="btn btn-delete" 
+                                           style="display: inline-block;"
+                                           onclick="return confirm('确定要删除该疫苗吗？')">删除</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        window.onload = function() {
+            setTimeout(function() {
+                var alertMessage = document.getElementById('alert-message');
+                if (alertMessage) {
+                    alertMessage.style.transition = 'opacity 0.5s';
+                    alertMessage.style.opacity = '0';
+                    setTimeout(function() {
+                        alertMessage.style.display = 'none';
+                    }, 500);
+                }
+            }, 3000);
+            
+            var hash = window.location.hash;
+            if (hash) {
+                setTimeout(function() {
+                    var element = document.querySelector(hash);
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        if (/^#vaccine-\d+$/.test(hash)) {
+                            element.classList.add('recently-edited');
+                            setTimeout(function() {
+                                element.classList.remove('recently-edited');
+                            }, 3000);
+                        }
+                    }
+                }, 100);
+            }
+        };
+        
+        // 处理搜索框回车事件
+        function handleSearchKeyDown(event) {
+            if (event.key === 'Enter') {
+                searchVaccines();
+            }
+        }
+        
+        // 疫苗搜索功能
+        function searchVaccines() {
+            var searchInput = document.getElementById('vaccineSearch');
+            var keyword = searchInput.value.trim().toLowerCase();
+            var tableRows = document.querySelectorAll('#vaccine-management tbody tr');
+            var hasResult = false;
+            var firstMatch = null;
+            
+            // 清除之前的高亮
+            tableRows.forEach(function(row) {
+                row.classList.remove('highlight');
+                row.style.display = '';
+            });
+            
+            // 移除之前的无结果提示
+            var existingNoResult = document.querySelector('#vaccine-management .no-result');
+            if (existingNoResult) {
+                existingNoResult.remove();
+            }
+            
+            if (!keyword) {
+                // 如果搜索框为空，显示所有行
+                return;
+            }
+            
+            // 遍历所有行进行搜索
+            tableRows.forEach(function(row) {
+                var vaccineName = row.cells[0].textContent.toLowerCase();
+                var manufacturer = row.cells[1].textContent.toLowerCase();
+                
+                // 检查疫苗名称或厂家是否包含关键词
+                if (vaccineName.includes(keyword) || manufacturer.includes(keyword)) {
+                    row.classList.add('highlight');
+                    hasResult = true;
+                    if (!firstMatch) {
+                        firstMatch = row;
+                    }
+                } else {
+                    // 不匹配的行可以隐藏或保持显示但不高亮
+                    // 这里选择隐藏不匹配的行
+                    row.style.display = 'none';
+                }
+            });
+            
+            if (hasResult && firstMatch) {
+                // 滚动到第一个匹配项
+                firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                // 显示无结果提示
+                var vaccinePanel = document.getElementById('vaccine-management');
+                var tableContainer = vaccinePanel.querySelector('.table-container');
+                var noResultDiv = document.createElement('div');
+                noResultDiv.className = 'no-result';
+                noResultDiv.textContent = '未找到匹配的疫苗，请尝试更换关键词';
+                vaccinePanel.insertBefore(noResultDiv, tableContainer);
+                noResultDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // 3秒后自动移除提示
+                setTimeout(function() {
+                    if (noResultDiv.parentNode) {
+                        noResultDiv.remove();
+                    }
+                }, 3000);
+                
+                // 显示所有行
+                tableRows.forEach(function(row) {
+                    row.style.display = '';
+                });
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>添加疫苗 - 疫苗管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 50%, #43e97b 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-container h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        input[readonly] {
+            background: #f5f5f5;
+            color: #333;
+            cursor: default;
+        }
+        .form-hint {
+            margin-top: 8px;
+            font-size: 13px;
+            color: #666;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #5568d3;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .alert-error {
+            background: #fee;
+            color: #c33;
+            border: 1px solid #fcc;
+        }
+        .alert-success {
+            background: #efe;
+            color: #3c3;
+            border: 1px solid #cfc;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>疫苗管理系统 - 管理后台</h1>
+        <div class="nav-links">
+            <span>管理员：{{ current_user.real_name }}</span>
+            <a href="{{ url_for('admin_dashboard') }}">返回管理后台</a>
+            <a href="{{ url_for('logout') }}">退出登录</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="form-container">
+            <h2>添加疫苗</h2>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div id="alert-message" class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form method="POST" id="vaccineForm">
+                <div class="form-group">
+                    <label>疫苗名称</label>
+                    <input type="text" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label>生产厂家</label>
+                    <input type="text" name="manufacturer" required>
+                </div>
+                <div class="form-group">
+                    <label>疫苗介绍</label>
+                    <textarea name="description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>库存数量</label>
+                    <input type="number" name="stock" required min="0">
+                </div>
+                <div class="form-group">
+                    <label>价格</label>
+                    <input type="number" name="price" required min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>入库时间</label>
+                    <input type="date" name="storage_date" id="storageDate" max="" required>
+                </div>
+                <div class="form-group">
+                    <label>保存时间（天）</label>
+                    <input type="number" name="save_time" id="saveTime" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label>过期日期</label>
+                    <input type="text" id="expireDateDisplay" readonly placeholder="" autocomplete="off">
+                    <p class="form-hint">过期日期 = 入库时间 + 保存天数</p>
+                </div>
+                <div class="buttons">
+                    <button type="submit" class="btn">添加</button>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">取消</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // 设置入库时间的最大值为今天
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            const storageDateInput = document.getElementById('storageDate');
+            const saveTimeInput = document.getElementById('saveTime');
+            const expireDisplay = document.getElementById('expireDateDisplay');
+            storageDateInput.setAttribute('max', today);
+
+            function updateExpireDate() {
+                var storage = storageDateInput.value;
+                var days = parseInt(saveTimeInput.value, 10);
+                if (!storage || !days || days < 1) {
+                    expireDisplay.value = '';
+                    return;
+                }
+                var parts = storage.split('-').map(Number);
+                var base = new Date(parts[0], parts[1] - 1, parts[2]);
+                base.setDate(base.getDate() + days);
+                var y = base.getFullYear();
+                var m = String(base.getMonth() + 1).padStart(2, '0');
+                var d = String(base.getDate()).padStart(2, '0');
+                expireDisplay.value = y + '-' + m + '-' + d;
+            }
+            storageDateInput.addEventListener('change', updateExpireDate);
+            storageDateInput.addEventListener('input', updateExpireDate);
+            saveTimeInput.addEventListener('input', updateExpireDate);
+            saveTimeInput.addEventListener('change', updateExpireDate);
+            updateExpireDate();
+
+            // 3秒后自动隐藏提示框
+            setTimeout(function() {
+                var alertMessage = document.getElementById('alert-message');
+                if (alertMessage) {
+                    alertMessage.style.transition = 'opacity 0.5s';
+                    alertMessage.style.opacity = '0';
+                    setTimeout(function() {
+                        alertMessage.style.display = 'none';
+                    }, 500);
+                }
+            }, 3000);
+        });
+    </script>
+</body>
+</html>

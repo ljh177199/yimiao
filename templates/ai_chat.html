@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI问询 - 疫苗管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(180deg, #f4f8ff 0%, #f6f7fb 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .header {
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 50%, #43e97b 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 14px;
+        }
+        .chat-container {
+            flex: 1 1 auto;
+            max-width: 980px;
+            margin: 16px auto;
+            width: 100%;
+            padding: 0 14px;
+            display: flex;
+            flex-direction: column;
+            background: #fff;
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(32, 74, 135, 0.12);
+            overflow: hidden;
+            min-height: 0;
+            height: calc(100vh - 110px);
+            max-height: calc(100vh - 110px);
+        }
+        .chat-header {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chat-header h2 {
+            color: #333;
+            font-size: 22px;
+        }
+        .chat-header p {
+            color: #666;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        .clear-history-btn {
+            padding: 8px 15px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .clear-history-btn:hover {
+            background: #c82333;
+        }
+        .chat-messages {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            min-height: 120px;
+            scroll-behavior: smooth;
+            padding-bottom: 26px;
+        }
+        .recent-questions {
+            padding: 10px 20px 12px;
+            border-bottom: 1px solid #f3f3f3;
+            background: #fcfdff;
+        }
+        .recent-questions h3 {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .recent-list {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .recent-item {
+            border: 1px solid #e7ebff;
+            background: #fff;
+            color: #5766cc;
+            font-size: 12px;
+            padding: 5px 10px;
+            border-radius: 14px;
+            cursor: pointer;
+            max-width: 220px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .recent-item:hover {
+            background: #f4f6ff;
+        }
+        .recent-empty {
+            font-size: 12px;
+            color: #999;
+        }
+        .message-row {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .message-row.user {
+            align-items: flex-end;
+        }
+        .message-row.ai,
+        .message-row.error {
+            align-items: flex-start;
+        }
+        .message {
+            max-width: 78%;
+            padding: 12px 15px;
+            border-radius: 12px;
+            line-height: 1.65;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            font-size: 15px;
+        }
+        .message.user {
+            align-self: flex-end;
+            background: #667eea;
+            color: white;
+        }
+        .message.ai {
+            align-self: flex-start;
+            background: #f0f0f0;
+            color: #333;
+        }
+        .message.error {
+            background: #fee;
+            color: #c33;
+        }
+        .message-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .message-actions button {
+            border: none;
+            background: transparent;
+            color: #8a8a8a;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 0;
+        }
+        .message-actions button:hover {
+            color: #4c5fd7;
+        }
+        .formatted-block {
+            margin: 0;
+        }
+        .formatted-block + .formatted-block {
+            margin-top: 8px;
+        }
+        .formatted-list {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .chat-input {
+            padding: 20px;
+            border-top: 1px solid #ddd;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            background: #fff;
+            flex-shrink: 0;
+        }
+        .chat-input textarea {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            resize: none;
+            font-size: 15px;
+            font-family: inherit;
+            height: 60px;
+            min-width: 300px;
+            max-height: 180px;
+            line-height: 1.5;
+        }
+        .chat-input textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .chat-input button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+            font-weight: 600;
+        }
+        .chat-input button:hover {
+            background: #5568d3;
+        }
+        .chat-input button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .typing-indicator {
+            padding: 10px 15px;
+            background: #f0f0f0;
+            border-radius: 10px;
+            max-width: 70%;
+            display: none;
+        }
+        .typing-indicator.active {
+            display: block;
+        }
+        .chat-status {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            color: #888;
+            font-size: 12px;
+            margin-top: 2px;
+            padding-bottom: 2px;
+        }
+        .quick-actions {
+            padding: 0 20px 12px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #f3f3f3;
+        }
+        .quick-actions button {
+            border: 1px solid #d8def7;
+            background: #f7f9ff;
+            color: #4c5fd7;
+            font-size: 12px;
+            padding: 6px 10px;
+            border-radius: 16px;
+            cursor: pointer;
+        }
+        .quick-actions button:hover {
+            background: #edf1ff;
+        }
+        .scroll-bottom-btn {
+            position: fixed;
+            right: 26px;
+            bottom: 86px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: #667eea;
+            color: #fff;
+            box-shadow: 0 6px 18px rgba(73, 94, 214, 0.4);
+            cursor: pointer;
+            font-size: 18px;
+            display: none;
+            z-index: 20;
+        }
+        .scroll-bottom-btn.show {
+            display: block;
+        }
+        @media (max-width: 768px) {
+            .header {
+                padding: 14px;
+            }
+            .header h1 {
+                font-size: 20px;
+            }
+            .nav-links {
+                display: none;
+            }
+            .chat-container {
+                margin: 8px auto;
+                padding: 0 8px;
+                border-radius: 10px;
+                height: calc(100vh - 76px);
+                max-height: calc(100vh - 76px);
+            }
+            .chat-header {
+                padding: 14px;
+            }
+            .chat-header h2 {
+                font-size: 18px;
+            }
+            .chat-header p {
+                font-size: 12px;
+                margin-top: 4px;
+            }
+            .quick-actions, .recent-questions {
+                padding-left: 12px;
+                padding-right: 12px;
+            }
+            .chat-messages {
+                padding: 12px;
+            }
+            .message {
+                max-width: 92%;
+                font-size: 14px;
+            }
+            .chat-input {
+                padding: 12px;
+            }
+            .chat-input textarea {
+                min-width: 100%;
+                font-size: 14px;
+            }
+            .chat-input button {
+                width: 100%;
+            }
+            .chat-status {
+                flex-direction: column;
+                gap: 4px;
+            }
+            .chat-messages {
+                min-height: 80px;
+                padding-bottom: 14px;
+            }
+            .scroll-bottom-btn {
+                right: 14px;
+                bottom: 78px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>疫苗管理系统</h1>
+        <div class="nav-links">
+            <span>欢迎，{{ current_user.real_name }}</span>
+            <a href="{{ url_for('user_dashboard') }}">返回用户中心</a>
+            <a href="{{ url_for('logout') }}">退出登录</a>
+        </div>
+    </div>
+    
+    <div class="chat-container">
+        <div class="chat-header">
+            <div>
+                <h2>疫苗智能咨询助手</h2>
+                <p>欢迎来到智能助手，可咨询疫苗知识、分析疫苗库存、跟踪预约记录等（不提供个人信息查询）</p>
+            </div>
+            <button class="clear-history-btn" onclick="clearHistory()">清空历史记录</button>
+        </div>
+        <div class="quick-actions">
+            <button onclick="fillQuickQuestion('请帮我查看我的预约记录')">我的预约记录</button>
+            <button onclick="fillQuickQuestion('请列出当前系统支持的疫苗')">疫苗列表</button>
+            <button onclick="fillQuickQuestion('请帮我分析系统疫苗库存情况')">库存分析</button>
+            <button onclick="fillQuickQuestion('请介绍流感疫苗适合哪些人群')">疫苗知识咨询</button>
+        </div>
+        <div class="recent-questions">
+            <h3>最近问题（点击可复用）</h3>
+            <div class="recent-list" id="recentQuestions"></div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+        </div>
+        
+        <div class="typing-indicator" id="typingIndicator">
+            <span class="loading"></span> 正在思考中...
+        </div>
+        
+        <div class="chat-input">
+            <textarea id="messageInput" maxlength="500" placeholder="请输入您的问题（Enter发送，Shift+Enter换行）..." onkeydown="handleKeyDown(event)" oninput="updateCharCount(); autoResizeInput();"></textarea>
+            <button id="sendButton" onclick="sendMessage()">发送</button>
+            <div class="chat-status">
+                <span>提示：可直接问“我的预约记录”“疫苗列表”“库存情况”</span>
+                <span id="charCount">0/500</span>
+            </div>
+        </div>
+    </div>
+    <button id="scrollBottomBtn" class="scroll-bottom-btn" onclick="scrollToBottom()" title="回到底部">↓</button>
+    
+    <script>
+        // 保存对话历史
+        let conversationHistory = [];
+        const WELCOME_MESSAGE = 'Hi,我是疫苗管理系统的智能AI助手，能够基于系统数据为您提供专业咨询。您可以咨询疫苗知识、分析疫苗库存、跟踪预约记录、获取接种建议等。为保护隐私安全，我不提供个人信息查询服务。请问有什么可以帮助您的？';
+        const MESSAGE_TIMEOUT_MS = 35000;
+        const RECENT_QUESTIONS_KEY = 'ai_chat_recent_questions';
+        const MAX_RECENT_QUESTIONS = 8;
+        
+        // 页面加载时获取历史记录
+        window.onload = function() {
+            loadHistory();
+            updateCharCount();
+            renderRecentQuestions();
+            autoResizeInput();
+            setupScrollListener();
+        };
+        
+        function loadHistory() {
+            fetch('/api/ai_chat/history', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                conversationHistory = [];
+                if (data.history && data.history.length > 0) {
+                    const chatMessages = document.getElementById('chatMessages');
+                    chatMessages.innerHTML = '';
+                    
+                    data.history.forEach(item => {
+                        if (item.role === 'user') {
+                            addMessage(item.content, 'user');
+                            conversationHistory.push({
+                                'role': 'user',
+                                'content': item.content
+                            });
+                        } else if (item.role === 'assistant') {
+                            addMessage(item.content, 'ai');
+                            conversationHistory.push({
+                                'role': 'assistant',
+                                'content': item.content
+                            });
+                        }
+                    });
+                } else {
+                    addMessage(WELCOME_MESSAGE, 'ai');
+                    conversationHistory.push({
+                        'role': 'assistant',
+                        'content': WELCOME_MESSAGE
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                addMessage(WELCOME_MESSAGE, 'ai');
+                conversationHistory.push({
+                    'role': 'assistant',
+                    'content': WELCOME_MESSAGE
+                });
+            });
+        }
+
+        function getRecentQuestions() {
+            try {
+                const raw = localStorage.getItem(RECENT_QUESTIONS_KEY);
+                const parsed = raw ? JSON.parse(raw) : [];
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (error) {
+                console.error('读取最近问题失败:', error);
+                return [];
+            }
+        }
+
+        function saveRecentQuestion(question) {
+            const trimmed = (question || '').trim();
+            if (!trimmed) {
+                return;
+            }
+            const existing = getRecentQuestions().filter(item => item !== trimmed);
+            existing.unshift(trimmed);
+            const next = existing.slice(0, MAX_RECENT_QUESTIONS);
+            localStorage.setItem(RECENT_QUESTIONS_KEY, JSON.stringify(next));
+            renderRecentQuestions();
+        }
+
+        function clearRecentQuestions() {
+            localStorage.removeItem(RECENT_QUESTIONS_KEY);
+            renderRecentQuestions();
+        }
+
+        function renderRecentQuestions() {
+            const container = document.getElementById('recentQuestions');
+            const items = getRecentQuestions();
+            if (!items.length) {
+                container.innerHTML = '<span class="recent-empty">暂无最近问题，发送后会自动记录</span>';
+                return;
+            }
+            container.innerHTML = '';
+            items.forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = 'recent-item';
+                btn.textContent = item;
+                btn.title = item;
+                btn.onclick = () => fillQuickQuestion(item);
+                container.appendChild(btn);
+            });
+        }
+        
+        function clearHistory() {
+            if (!confirm('确定要清空所有历史记录吗？')) {
+                return;
+            }
+            
+            fetch('/api/ai_chat/history/clear', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const chatMessages = document.getElementById('chatMessages');
+                    chatMessages.innerHTML = '';
+                    conversationHistory = [];
+                    addMessage(WELCOME_MESSAGE, 'ai');
+                    conversationHistory.push({
+                        'role': 'assistant',
+                        'content': WELCOME_MESSAGE
+                    });
+                    clearRecentQuestions();
+                    alert('历史记录已清空');
+                } else {
+                    alert('清空失败：' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('清空失败，请稍后重试');
+            });
+        }
+        
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function fillQuickQuestion(question) {
+            const messageInput = document.getElementById('messageInput');
+            messageInput.value = question;
+            updateCharCount();
+            messageInput.focus();
+        }
+
+        function updateCharCount() {
+            const messageInput = document.getElementById('messageInput');
+            const charCount = document.getElementById('charCount');
+            const count = messageInput.value.trim().length;
+            charCount.textContent = `${count}/500`;
+        }
+
+        function autoResizeInput() {
+            const messageInput = document.getElementById('messageInput');
+            messageInput.style.height = '60px';
+            messageInput.style.height = `${Math.min(messageInput.scrollHeight, 180)}px`;
+        }
+
+        function scrollToBottom() {
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function setupScrollListener() {
+            const chatMessages = document.getElementById('chatMessages');
+            const scrollBottomBtn = document.getElementById('scrollBottomBtn');
+            chatMessages.addEventListener('scroll', () => {
+                const threshold = 120;
+                const isFarFromBottom = chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight > threshold;
+                scrollBottomBtn.classList.toggle('show', isFarFromBottom);
+            });
+        }
+        
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+            const message = messageInput.value.trim();
+            
+            if (!message) {
+                return;
+            }
+            if (message.length > 500) {
+                addMessage('消息过长，请控制在500字以内', 'error');
+                return;
+            }
+            
+            addMessage(message, 'user');
+            saveRecentQuestion(message);
+            messageInput.value = '';
+            updateCharCount();
+            autoResizeInput();
+            
+            // 更新对话历史
+            conversationHistory.push({
+                'role': 'user',
+                'content': message
+            });
+            
+            sendButton.disabled = true;
+            sendButton.textContent = '发送中...';
+            document.getElementById('typingIndicator').classList.add('active');
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), MESSAGE_TIMEOUT_MS);
+
+            try {
+                const response = await fetch('/api/ai_chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        message: message, 
+                        conversation_history: conversationHistory 
+                    }),
+                    signal: controller.signal
+                });
+                const data = await response.json();
+
+                document.getElementById('typingIndicator').classList.remove('active');
+                sendButton.disabled = false;
+                sendButton.textContent = '发送';
+                
+                if (data.error) {
+                    addMessage(data.error, 'error');
+                } else {
+                    addMessage(data.response, 'ai');
+                    // 更新对话历史
+                    conversationHistory.push({
+                        'role': 'assistant',
+                        'content': data.response
+                    });
+                }
+            } catch (error) {
+                document.getElementById('typingIndicator').classList.remove('active');
+                sendButton.disabled = false;
+                sendButton.textContent = '发送';
+                if (error.name === 'AbortError') {
+                    addMessage('请求超时，请稍后重试或简化问题后再试', 'error');
+                    return;
+                }
+                addMessage('发生错误，请稍后重试', 'error');
+                console.error('Error:', error);
+            } finally {
+                clearTimeout(timeoutId);
+            }
+        }
+        
+        function addMessage(text, type) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageRow = document.createElement('div');
+            messageRow.className = `message-row ${type}`;
+
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            if (type === 'ai') {
+                messageDiv.innerHTML = formatAIMessage(text);
+            } else {
+                messageDiv.textContent = text;
+            }
+
+            const actions = document.createElement('div');
+            actions.className = 'message-actions';
+
+            const copyBtn = document.createElement('button');
+            copyBtn.type = 'button';
+            copyBtn.textContent = '复制';
+            copyBtn.onclick = () => copyMessage(text, copyBtn);
+            actions.appendChild(copyBtn);
+
+            messageRow.appendChild(messageDiv);
+            messageRow.appendChild(actions);
+            chatMessages.appendChild(messageRow);
+            scrollToBottom();
+        }
+
+        function copyMessage(text, buttonElement) {
+            navigator.clipboard.writeText(text)
+                .then(() => {
+                    const originalText = buttonElement.textContent;
+                    buttonElement.textContent = '已复制';
+                    setTimeout(() => {
+                        buttonElement.textContent = originalText;
+                    }, 1200);
+                })
+                .catch(error => {
+                    console.error('复制失败:', error);
+                });
+        }
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function formatAIMessage(text) {
+            const sanitizedText = (text || '').replace(/\*/g, '');
+            const lines = sanitizedText.split('\n').map(line => line.trimRight());
+            const blocks = [];
+            let currentList = null;
+
+            lines.forEach(rawLine => {
+                const line = rawLine.trim();
+                if (!line) {
+                    if (currentList) {
+                        blocks.push(currentList);
+                        currentList = null;
+                    }
+                    return;
+                }
+
+                const numberMatch = line.match(/^\d+\.\s+(.*)$/);
+                const bulletMatch = line.match(/^[-•]\s+(.*)$/);
+                const listContent = numberMatch ? numberMatch[1] : (bulletMatch ? bulletMatch[1] : null);
+
+                if (listContent) {
+                    if (!currentList) {
+                        currentList = [];
+                    }
+                    currentList.push(escapeHtml(listContent));
+                } else {
+                    if (currentList) {
+                        blocks.push(currentList);
+                        currentList = null;
+                    }
+                    blocks.push(escapeHtml(line));
+                }
+            });
+
+            if (currentList) {
+                blocks.push(currentList);
+            }
+
+            if (!blocks.length) {
+                return escapeHtml(sanitizedText);
+            }
+
+            return blocks.map(block => {
+                if (Array.isArray(block)) {
+                    const items = block.map(item => `<li>${item}</li>`).join('');
+                    return `<ul class="formatted-block formatted-list">${items}</ul>`;
+                }
+                return `<p class="formatted-block">${block}</p>`;
+            }).join('');
+        }
+    </script>
+</body>
+</html>

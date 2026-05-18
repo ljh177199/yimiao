@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>疫苗列表 - 疫苗管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 50%, #43e97b 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 14px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        .vaccine-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .vaccine-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .vaccine-card:hover {
+            transform: translateY(-5px);
+        }
+        .vaccine-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        .vaccine-card .manufacturer {
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .vaccine-card .description {
+            color: #999;
+            font-size: 14px;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        .vaccine-card .info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        .vaccine-card .info span {
+            font-size: 14px;
+        }
+        .vaccine-card .stock {
+            color: #48bb78;
+            font-weight: bold;
+        }
+        .vaccine-card .price {
+            color: #e53e3e;
+            font-weight: bold;
+        }
+        .vaccine-card .date-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: #666;
+        }
+        .vaccine-card .expire-date.expired {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .vaccine-card .expire-date.warning {
+            color: #f59e0b;
+            font-weight: bold;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background: #20c997;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            text-align: center;
+            transition: background 0.3s;
+        }
+        .btn:hover {
+            background: #1aa885;
+        }
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .empty {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>疫苗预约中心</h1>
+        <div class="nav-links">
+            <span>欢迎，{{ current_user.real_name }}</span>
+            <a href="{{ url_for('user_dashboard') }}">返回用户中心</a>
+            <a href="{{ url_for('logout') }}">退出登录</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2 style="color: #333; margin-bottom: 20px;">疫苗列表</h2>
+        {% if vaccines %}
+            <div class="vaccine-grid">
+                {% for vaccine in vaccines %}
+                    <div class="vaccine-card">
+                        <h3>{{ vaccine.name }}</h3>
+                        <p class="manufacturer">生产厂家：{{ vaccine.manufacturer }}</p>
+                        <p class="description">{{ vaccine.description or '暂无描述' }}</p>
+                        <div class="info">
+                            <span class="stock">库存：{{ vaccine.stock }}</span>
+                            <span class="price">价格：¥{{ vaccine.price }}</span>
+                        </div>
+                        <div class="date-info">
+                            <span class="storage-date">入库时间：{{ vaccine.storage_date.strftime('%Y-%m-%d') if vaccine.storage_date else '未设置' }}</span>
+                            {% if vaccine.storage_date and vaccine.save_time %}
+                                {% set expire_date = vaccine.storage_date + timedelta(days=vaccine.save_time) %}
+                                <span class="expire-date {% if expire_date < current_time %}expired{% elif (expire_date - current_time).days <= 7 %}warning{% endif %}">
+                                    过期日期：{{ expire_date.strftime('%Y-%m-%d') }}
+                                </span>
+                            {% else %}
+                                <span class="expire-date">过期日期：未设置</span>
+                            {% endif %}
+                        </div>
+                        <a href="{{ url_for('create_appointment', vaccine_id=vaccine.id) }}" 
+                           class="btn" 
+                           {% if vaccine.stock <= 0 %}disabled{% endif %}>
+                            {% if vaccine.stock > 0 %}立即预约{% else %}库存不足{% endif %}
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty">暂无疫苗信息</div>
+        {% endif %}
+    </div>
+</body>
+</html>
